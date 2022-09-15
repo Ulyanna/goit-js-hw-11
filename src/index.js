@@ -1,12 +1,9 @@
 import './css/styles.css';
 import SimpleLightbox from "simplelightbox"
 import "simplelightbox/dist/simple-lightbox.min.css";
-
 import Notiflix from 'notiflix';
 import "notiflix/dist/notiflix-3.2.5.min.css";
 import PicturesAPIService from './pictures-service/pictures_service_api'
-
-
 
 
 const refs = {
@@ -20,25 +17,32 @@ const picturesAPIService = new PicturesAPIService();
 refs.searchForm.addEventListener('submit', onSearch);
 refs.loadMoreBtn.addEventListener('click', onLoadMore);
 
+const observer = new IntersectionObserver(function
+([entry], observer){
+         if (entry.isIntersecting) {
+      observer.unobserve(entry.target); 
+      onLoadMore();
+    }
+}, {});
+
+
 function onSearch(e) {
     e.preventDefault()
     
     picturesAPIService.query = e.currentTarget.elements.searchQuery.value;
     picturesAPIService.resetPage()
-     refs.loadMoreBtn.classList.add('ishidden')
-    picturesAPIService.fetchPictures().then((pictures) => {
-        if (pictures.length === 0) {
+    refs.loadMoreBtn.classList.add('ishidden')
+      picturesAPIService.fetchPictures().then((data) => {
+        if (data.hits.length === 0) {
             Notiflix.Notify.info('Sorry, there are no images matching your search query. Please try again.');
         }
         clearPicturesContainer()
-        const markUp = createPicturesMarkup(pictures);
+        const markUp = createPicturesMarkup(data.hits);
         appendPicturesCardMarcup(markUp);
+          Notiflix.Notify.info(`Hooray! We found ${data.totalHits} images.`); 
+    
         refs.loadMoreBtn.classList.remove('ishidden')
-           lightbox = new SimpleLightbox('.gallery a', {
-               captionsData: 'alt',
-               captionDelay: 250,
-});
-
+        loadingGallaryFlexbox()         
 })
   .catch(error => console.log(error));
  
@@ -46,24 +50,32 @@ function onSearch(e) {
 }
 
 function onLoadMore(e) {
-    picturesAPIService.fetchPictures().then((pictures) => {
-        const markUp = createPicturesMarkup(pictures);
+    picturesAPIService.fetchPictures().then((data) => {
+        const markUp = createPicturesMarkup(data.hits);
         appendPicturesCardMarcup(markUp);
-        
+         if (picturesAPIService.page - 1 >= data.totalHits / 40) {
+             Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")  
+             refs.loadMoreBtn.classList.add('ishidden')
+        }  
         lightbox.refresh()
+     
 })
   .catch(error => console.log(error));
 }
 
 function appendPicturesCardMarcup(markUp) {
-    refs.picturesContainer.insertAdjacentHTML('beforeend', markUp )
+    refs.picturesContainer.insertAdjacentHTML('beforeend', markUp)
+     const lastEl = refs.picturesContainer.lastElementChild;
+          if (lastEl) {
+              observer.observe(lastEl)
+          }   
 }
 
 function createPicturesMarkup(pictures) {
   return pictures
     .map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads }) => {
       return `<a href="${largeImageURL}"><div class="photo-card">
-  <img src="${webformatURL}" alt="${tags}" loading="lazy" />
+  <img src="${webformatURL}" alt="${tags}" loading="lazy" class="img-card" />
   <div class="info">
     <p class="info-item">
       <b>Likes</b>${likes}
@@ -86,4 +98,16 @@ function createPicturesMarkup(pictures) {
 function clearPicturesContainer() {
 refs.picturesContainer.innerHTML = '';
 }
+
+function loadingGallaryFlexbox() {
+    lightbox = new SimpleLightbox('.gallery a', {
+               captionsData: 'alt',
+               captionDelay: 250,
+});
+}
+
+
+
+
+
 
