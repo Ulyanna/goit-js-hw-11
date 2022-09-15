@@ -53,11 +53,13 @@ function onLoadMore(e) {
     picturesAPIService.fetchPictures().then((data) => {
         const markUp = createPicturesMarkup(data.hits);
         appendPicturesCardMarcup(markUp);
+        lightbox.refresh()
          if (picturesAPIService.page - 1 >= data.totalHits / 40) {
              Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")  
              refs.loadMoreBtn.classList.add('ishidden')
         }  
-        lightbox.refresh()
+        
+        console.log(lightbox)
      
 })
   .catch(error => console.log(error));
