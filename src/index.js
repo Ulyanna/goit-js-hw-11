@@ -6,6 +6,11 @@ import "notiflix/dist/notiflix-3.2.5.min.css";
 import PicturesAPIService from './pictures-service/pictures_service_api'
 
 
+let lightbox = new SimpleLightbox('.gallery a', {
+               captionsData: 'alt',
+               captionDelay: 250,
+});
+
 const refs = {
     searchForm: document.querySelector('.search-form'),
     picturesContainer: document.querySelector('.gallery'),
@@ -39,10 +44,10 @@ function onSearch(e) {
         clearPicturesContainer()
         const markUp = createPicturesMarkup(data.hits);
         appendPicturesCardMarcup(markUp);
+        lightbox.refresh()
           Notiflix.Notify.info(`Hooray! We found ${data.totalHits} images.`); 
     
-        refs.loadMoreBtn.classList.remove('ishidden')
-        loadingGallaryFlexbox()         
+        refs.loadMoreBtn.classList.remove('ishidden')      
 })
   .catch(error => console.log(error));
  
@@ -101,12 +106,7 @@ function clearPicturesContainer() {
 refs.picturesContainer.innerHTML = '';
 }
 
-function loadingGallaryFlexbox() {
-    lightbox = new SimpleLightbox('.gallery a', {
-               captionsData: 'alt',
-               captionDelay: 250,
-});
-}
+
 
 
 
